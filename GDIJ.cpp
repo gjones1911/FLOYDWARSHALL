@@ -18,7 +18,7 @@
 #define pmsg(s) printf("%s\n",s)
 
 #define SZ 256
-#define MX 6000000
+#define MX 100100
 
 const int PNT = 0;
 
@@ -109,8 +109,6 @@ class graph
 		vector<vector<int> > gph;
 		vector<vector<int> > Sgph;
 		vector<vector<int> > Lgph;
-		vector<vector<int> > A;
-		vector<vector<long> > AC;
 		set<node * > G;
 		int nodecnt;
 		int max;
@@ -126,8 +124,6 @@ class graph
 		graph(vector<int> f, vector<int> t, vector<int> wt, int N, int type);
 		void SetNodes(int &i, int &j, int &wt);
 		node * GETNODE(int num);
-		void MakeA();
-		vector<vector<long> >  MakeAchgs( int chgs);
 		void ResetG();
 		//int GDIKSTRA(int &sn, queue<int> &Q, queue<int> &dist);
 		int GDIKSTRA(int &sn, queue<int> &Q, int &dist);
@@ -148,244 +144,6 @@ void graph::ResetG()
 }
 
 
-//will create a matrix consisting of shortest paths 
-//using exactly chgs charges and return that matrix
-vector<vector<long> >  graph::MakeAchgs( int chgs)
-{
-
-	int i, j, k, f, z, t, num = Sgph.size();
-
-	vector<vector<long> > ACC(num), Ai(num);
-	vector<vector<long> > AC1(num), AC8, AC16, AC32;
-
-	vector<vector<long> > AMX(num);
-	vector< vector<vector<long> > > all;
-	all.resize(7);
-	
-	AC.resize(A.size());
-
-
-	F(i,num)
-	{
-		AMX[i].resize(A[i].size(),MX);
-		ACC[i].resize(A[i].size());
-		AC[i].resize(A[i].size());
-		AC1[i].resize(A[i].size());
-	}
-
-
-
-	for(i = 0; i < A.size(); i++)
-	{
-		for(j = 0; j < A[i].size(); j++)
-		{
-			AC[i][j] = (long)A[i][j];
-			ACC[i][j] = (long)A[i][j];
-			AC1[i][j] = (long)A[i][j];
-		}
-	}
-
-
-	int sofar, next, l, cnt = 1;;
-	int fr = 4, h = 128, eight = 8, K = 1024, OK = 131072, OM = 1048576, HM = 524288;
-
-
-
-	int a = 1, b = 1, limit = chgs; ;
-
-	Ai = AMX;
-
-	for(sofar = 2; sofar <= limit; sofar = next)
-	{
-		Ai = AMX;
-
-		F(f,Sgph.size() )
-		{
-			F(t,Sgph.size())
-			{
-				F(z,Sgph.size())
-				{
-					if(1)
-					{
-						long fz = AC[f][z];
-						long zt = ACC[z][t];
-
-						if(Ai[f][t] > fz + zt)
-						{
-							Ai[f][t] = fz + zt;
-						}
-					}
-				}
-			}
-
-		}
-
-		//store certain versions for use at the end
-		if( sofar == OM)
-		{ 
-			all[6] = Ai;;
-		}
-		else if( sofar == HM)
-		{
-			all[5] = Ai;;
-
-		}
-		else if( sofar ==  OK)
-		{
-			all[4] = Ai;;
-
-		}
-		else if( sofar == K)
-		{
-			all[3] = Ai;;
-
-		}
-		else if( sofar == h)
-		{
-			all[2] = Ai;;
-
-		}
-		else if( sofar == eight)
-		{
-			all[1] = Ai;;
-
-		}
-		else if( sofar == fr)
-		{
-			all[0] = Ai;;
-
-		}
-
-
-		if( sofar * 2 < limit)
-		{
-			next = sofar*2;
-			AC = Ai;
-			ACC = Ai;
-			a = sofar;
-			b = sofar;
-
-		}
-		else
-		{
-			ACC = Ai;
-			b = sofar;
-
-			if( chgs - sofar >= OM)
-			{
-				AC = all[6];
-				next = sofar + OM;
-				a = OM;
-			}
-			else if( chgs - sofar >= HM)
-			{
-				AC = all[5];
-				next = sofar + HM;
-				a = HM;
-
-			}
-			else if( chgs - sofar >=  OK)
-			{
-				AC = all[4];
-				next = sofar + OK;
-				a = OK;
-
-			}
-			else if( chgs - sofar >= K)
-			{
-				AC = all[3];
-				next = sofar + K;
-				a = K;
-
-			}
-			else if( chgs - sofar >= h)
-			{
-				AC = all[2];
-				next = sofar + h;
-				a = h;
-
-			}
-			else if( chgs - sofar >= eight)
-			{
-				AC = all[1];
-				next = sofar + eight;;
-				a = eight;
-
-			}
-			else if( chgs - sofar >= fr)
-			{
-				AC = all[0];
-				next = sofar + fr;
-				a = fr;
-
-			}
-			else
-			{
-				AC = AC1;
-				next = sofar+1;;
-				a = 1;;
-			}
-		}
-	}
-
-
-	return Ai;
-}
-
-//makes the A matrix consisting of the shortest paths using
-//exactly one charge
-void graph::MakeA()
-{
-	int i, j, k, f, t;
-
-	A.resize(Sgph.size());
-
-
-	F(i,Sgph.size() )
-	{
-		A[i].resize(Sgph[i].size(),MX);
-	}
-
-	int fi, ij, jt ,ft, min = -MX;;
-
-	F(f, Sgph.size())
-	{
-
-		F(t,Sgph.size())
-		{
-			min = MX;		
-
-			F(i,Sgph.size())
-			{
-
-				F(j, Sgph.size())
-				{
-					if(1)
-					{
-						fi = Sgph[f][i];
-						ij = Lgph[i][j];
-						jt = Sgph[j][t];
-
-						if(PNT)	printf("f %d, t %d,=%d  i %d,  j %d, = %d\n", f, t, A[f][t],i, j , ij);
-						if(PNT)	printf("fi %d, ij %d, jt %d, total %d\n",fi , -ij, jt, fi-ij+jt);
-
-
-						if( min > fi-ij+jt)
-						{
-							A[f][t] = fi-ij+jt;
-							min = fi-ij+jt;
-						}
-					}
-				}
-			}
-
-		}
-	}
-
-	return ;
-}
-
-
 void graph::printGAry(int t)
 {
 	int i = 0, j = 0;;
@@ -395,13 +153,7 @@ void graph::printGAry(int t)
 
 	if(t == 0) gh = gph;
 	else if(t == 1) gh = Sgph;
-	else if(t == 2) gh = Lgph;
-	else gh = A;
-
-	if(t == 0) printf("printing Gph\n");
-	else if(t == 1) printf("printing SGph\n");
-	else if(t == 2) printf("printing LGph\n");
-	else printf("printing A\n");
+	else gh = Lgph;
 
 	F( i, gh.size())
 	{
@@ -409,14 +161,11 @@ void graph::printGAry(int t)
 		F(j, gh[i].size())
 		{
 			//if(gh[i][j] < MX && i != j)
-			//if(i != j)
-			//	{
-			//		printf("---%d--->Node: %d\n", gh[i][j], j+1);
-			//
-			printf("%d ",gh[i][j]);
-			//	}
+			if(i != j)
+			{
+				printf("---%d--->Node: %d\n", gh[i][j], j+1);
+			}
 		}
-		printf("\n");
 	}
 }
 
@@ -438,7 +187,7 @@ void graph::printGSet()
 		{
 			printf("child %d:--- %d--->NODE %d\n",i, mit->first,mit->second->num);
 		}
-
+	
 	}
 }
 
@@ -447,7 +196,7 @@ graph::graph(vector<int> f, vector<int> t, vector<int> w, int N, int type)
 {
 	int i = 0, j = 0;
 
-	//	printf("f size %d, t size %d, w size %d\n",f.size(), t.size(), w.size());
+	if(PNT)printf("f size %d, t size %d, w size %d\n",f.size(), t.size(), w.size());
 
 	gph.resize(N);
 	Sgph.resize(N);
@@ -455,8 +204,7 @@ graph::graph(vector<int> f, vector<int> t, vector<int> w, int N, int type)
 
 	F(i,N)
 	{
-		//gph[i].resize(N,MX);
-		gph[i].resize(N,0);
+		gph[i].resize(N,MX);
 		Sgph[i].resize(N,MX);
 		Lgph[i].resize(N,-MX);
 	}
@@ -480,7 +228,7 @@ graph::graph(vector<int> f, vector<int> t, vector<int> w, int N, int type)
 
 	set<node *>::iterator sit;
 	set<int>::iterator isit;
-
+	
 	set<int> sh;
 
 	F(i,f.size())
@@ -491,7 +239,7 @@ graph::graph(vector<int> f, vector<int> t, vector<int> w, int N, int type)
 			nd = new node(f[i],N);
 			G.insert(nd);
 		}
-
+		
 		if( sh.find(t[i]) == sh.end())
 		{
 			sh.insert(t[i]);
@@ -499,15 +247,13 @@ graph::graph(vector<int> f, vector<int> t, vector<int> w, int N, int type)
 			G.insert(nd);
 		}
 	}
-
+	
 	F(i,f.size())
 	{
 		int fm, to, wt;
 		fm = f[i];
 		to = t[i];
 		wt = w[i];
-
-		//printf("i is %d\n",i);
 
 		node * fr, * tw;
 
@@ -520,7 +266,7 @@ graph::graph(vector<int> f, vector<int> t, vector<int> w, int N, int type)
 			sit++;
 			fr = (*sit);
 		}
-
+		
 		sit = G.begin();
 		tw = (*sit);
 		while(sit != G.end() && tw->num != to)
@@ -533,39 +279,22 @@ graph::graph(vector<int> f, vector<int> t, vector<int> w, int N, int type)
 		fr->kids.insert(make_pair(wt,tw));
 
 		gph[fm-1][to-1] = wt;
-		if(Sgph[fm-1][to-1] > wt) Sgph[fm-1][to-1] = wt;
-		if(Lgph[fm-1][to-1] < wt ) Lgph[fm-1][to-1] = wt;
+		Sgph[fm-1][to-1] = wt;
+		Lgph[fm-1][to-1] = wt;
 
 
 		if(type == 1)
 		{
 			tw->kids.insert(make_pair(wt,fr));
-			//gph[to-1][fm-1] = wt;
-			if(gph[to-1][fm-1] < wt) gph[to-1][fm-1] = wt;
-			if(Sgph[to-1][fm-1] > wt) Sgph[to-1][fm-1] = wt;
-			if(Lgph[to-1][fm-1] < wt) Lgph[to-1][fm-1] = wt;
+			gph[to-1][fm-1] = wt;
+			Sgph[to-1][fm-1] = wt;
+			Lgph[to-1][fm-1] = wt;
 		}
-
-
-		//printf("from: %d to %d is %d\n", fm,to,wt);
+		
+		
+		if(PNT)printf("from: %d to %d is %d\n", fm,to,wt);
 
 	}
-
-
-	F(i,N)
-	{
-		F(j,N)
-		{
-			if(i == j)
-			{
-				//				gph[i][j] = 0;
-				//				Sgph[i][j] = 0;
-				//				Lgph[i][j] = 0;
-			}
-		}
-	}
-
-
 
 }
 
@@ -590,8 +319,8 @@ graph::graph(int size, int initval)
 
 void graph::SetNodes(int &i, int &j, int &wt)
 {
-	gph[i][j] = wt;
-	return;
+		gph[i][j] = wt;
+		return;
 }
 
 node * graph::GETNODE(int id)
@@ -635,7 +364,6 @@ int graph::GDIKSTRA(int &sn, queue<int> &Q, int &DIST)
 	int cn = Q.front();
 	int dist = DIST;
 	Q.pop();
-	//DIST.pop();
 
 
 	if(PNT) printf("-----------processing node %d from %d, current D %d\n",cn,sn,dist);
@@ -662,46 +390,49 @@ int graph::GDIKSTRA(int &sn, queue<int> &Q, int &DIST)
 
 		int D = (*kmit).first + dist;
 
-
-		printf("str %d , cn %d child %d\n", sn, cn, child->num);
-		printf("possible new dis is %d\n", D);
+		if(PNT)printf("str %d , cn %d child %d\n", sn, cn, child->num);
+		if(PNT)printf("possible new dis is %d\n", D);
 
 		if(child->num != sn && Sgph[sn-1][child->num-1] > D)
 		{
-			printf("new min dist of %d vs %d from %d to %d\n", D, Sgph[sn-1][child->num-1],sn, child->num);
+			if(PNT)printf("new min dist of %d vs %d from %d to %d\n", D, Sgph[sn-1][child->num-1],sn, child->num);
 			Sgph[sn-1][child->num-1] = D;
 
-
+			//check for this child to actually be a physical child of start  node
+			//if so add this child again with new dist
 			MF(it, SN->kids)
 			{
 				if((*it).second == child)
 				{
-					//ADDNODE();
 					SN->ADDCHILD( child->num, D, child);
 				}
 			}
 		}
-	}
-
-
-	MF(kmit, CN->kids)
-	{
-		child = GETNODE((*kmit).second->num);
-
-		int D = (*kmit).first + dist;
-	
+		
 		if(child->v == 0)
 		{
 			Q.push(child->num);
-			//DIST.push(Sgph[sn-1][child->num-1]);
-			printf("adding dist %d\n",Sgph[sn-1][child->num-1]);
 		}
-		//if(child->v == 0)	GDIKSTRA(sn, child->num, Sgph[sn][child->num]);
 	}
 
 
 	return 1;
 }
+
+
+void PNTSET( set<int>S)
+{
+	set<int>::iterator sit;
+
+	int i = 0;
+
+	SF(sit,S)
+	{
+		printf("set item %d, %d\n", i, (*sit));
+		i++;
+	}
+}
+
 
 void graph::MINDIKSTRA()
 {
@@ -721,6 +452,8 @@ void graph::MINDIKSTRA()
 		}
 
 		ResetG();
+
+	//	(*sit)->v = 1;
 	}
 }
 
@@ -739,6 +472,7 @@ int graph::MXST()
 	
 	F(i, Sgph.size())
 	{
+		//printf("\n\nChecking for row %d------\n",i);
 		int cnode = i;
 		MS.clear();
 		F(j, Sgph[i].size())
@@ -748,9 +482,11 @@ int graph::MXST()
 
 			dis = Sgph[cnode][to];
 
-			if( dis != MX)
+
+
+			if( dis != MX && dis != 0)
 			{
-				if(PNT) printf("dist from %d to %d is %d\n", cnode, to , dis);
+				if(PNT)printf("dist from %d to %d is %d\n", cnode, to , dis);
 				
 				mit = MS.find( dis ); 
 
@@ -758,7 +494,10 @@ int graph::MXST()
 				//add i and j to the set
 				if(mit == MS.end())
 				{
-					if(PNT)printf("dist %d not found\n", dis);
+					//if(PNT)printf("dist %d not found\n", dis);
+			//		printf("dist %d not found\n", dis);
+
+			//		printf("inserting %d and %d\n",i,j);
 					//MSET.insert(i);
 					MS[dis].insert(i);;
 					MS[dis].insert(j);;
@@ -787,9 +526,13 @@ int graph::MXST()
 
 					int bdm = 0;
 
+			//		printf("dist %d, checking set------\n", dis);
+
+			//		PNTSET(MSET);
+
 					SF(sit, MSET)
 					{
-						if( Sgph[(*sit)][j] != dis) 
+						if(  j != (*sit) && Sgph[(*sit)][j] != dis) 
 						{
 							bdm = 1; 
 						}
@@ -797,7 +540,7 @@ int graph::MXST()
 
 					if(bdm == 0) MS[dis].insert(j);
 					if( mx < MS[dis].size() ) mx = MS[dis].size();
-					MSET.clear();
+					//MSET.clear();
 				}
 			}
 		}
@@ -805,6 +548,7 @@ int graph::MXST()
 
 
 	printf("max is %d\n",mx);
+	return mx;
 }
 
 
@@ -960,31 +704,26 @@ int FLOYDW(int chg, vector<vector<int> >&G, int t)
 		{
 			F(j, G.size())
 			{
-				int ij = G[i][j];
-				int ik = G[i][k];
-				int kj = G[k][j];
 
-				if(PNT)	printf("G[%d][%d] %d > G[%d][%d]= %d + G[%d][%d]= %d\n",i,j,G[i][j], i,k,G[i][k], k, j, G[k][j]);
+					
+					int ij = G[i][j];
+					int ik = G[i][k];
+					int kj = G[k][j];
+
+					printf("G[%d][%d] %d > G[%d][%d]= %d + G[%d][%d]= %d\n",i,j,G[i][j], i,k,G[i][k], k, j, G[k][j]);
 
 				if( t == 0 && ik < MX && kj < MX && ij > ik + kj)
 				{
-					if(PNT)printf("new shortest path %d\n", ik+kj);
+					printf("new shortest path %d\n", ik+kj);
 					G[i][j] = G[i][k] + G[k][j];
 				}
-				else if( t == 1 && i != j && i != k && k != j && ik > -MX && kj > -MX )
+				else if(( t == 1 && ik > -MX && kj > -MX && ij < ik + kj))
 				{
-					int f = (ik < kj ) ? ik : kj;
-
-					if(PNT)printf("new longest path %d\n", ik+kj);
-
-					if( ik+kj > G[i][j])
-					{
-						G[i][j] = ik+kj;;
-
-					}
+					printf("new longest path %d\n", ik+kj);
+					G[i][j] = G[i][k] + G[k][j];
 				}
-				else if(t == 0) if(PNT) pmsg("no new sp\n");
-				else if(PNT)pmsg("no new lp\n");
+				else if(t == 0)pmsg("no new sp\n");
+				else pmsg("no new lp\n");
 
 			}
 		}
@@ -1111,6 +850,10 @@ int main(int argc, char ** argv)
 
 	int num = 10;
 
+	//CODE SPECific VARS
+	//graph gph(num,SZ);
+
+
 	string N,from,to,wt,chg;
 
 	//get number of vertices N, from, to, and weight vectors, and the number of charges
@@ -1124,23 +867,38 @@ int main(int argc, char ** argv)
 	fv = (SVtoIV( StoSV(from,fm) ));
 	tv = (SVtoIV( StoSV(to  ,tt) ));
 	int numb = 0;
-
+	
 	int cnt = 0;
 
 	while(cnt < fv.size())
 	{
 		cin>>numb;
 		cnt++;
+//		printf("num is %d\n", numb);
 		wtv.push_back(numb);	
 	}
 
-	cin>>chg;
+	//getline(cin,wt);
+	getline(cin,chg);
+
 
 	int n = atoi(N.c_str());
 	int chn = atoi(chg.c_str());
 
-	graph gph(fv, tv, wtv,n,0);
-	
+	printf("N: %d, charges: %d\n", n, chn);
+
+
+
+	//convert the string vectors into integer vectors
+	//wtv = (SVtoIV( StoSV(wt,"wt") ));
+
+//	pmsg("its here\n");
+	graph gph(fv, tv, wtv,n,1);
+	graph Dgph(fv, tv, wtv,n,0);
+	graph Fgph(fv, tv, wtv,n,0);
+	graph Bgph(fv, tv, wtv,n,0);
+
+	//create a graph class
 	gph.max = SZ;
 	gph.min = -SZ;
 
@@ -1159,38 +917,20 @@ int main(int argc, char ** argv)
 
 	string str;
 
-	//make the shortest path matrix 
-	//stored in the graph class as Sgph
-	FLOYDW(chn,gph.Sgph,0);
-	
+//	gph.printGAry(1);
 
-	//make the A matrix that is 
-	//the shortest path using only one charge
-	//stored as A in the graph class
-	gph.MakeA();
-	
-	//find the min path using various conditions
-	if( chn == 0)
-	{
-		printf("%d\n",gph.Sgph[0][n-1]);
-		return gph.Sgph[0][n-1];
-	}
-	else if( n == 1)
-	{
-		printf("%d\n", -1*gph.gph[0][0]*chn);
-		return -1*gph.gph[0][0]*chn;
-	}
-	else if(chn == 1 || wtv.size() == 1)
-	{
-		printf("%d\n",gph.A[0][n-1]);
-		return gph.A[0][n-1];
-	}
-	else
-	{
-		vector<vector<long> >  ans = gph.MakeAchgs(chn);
+//	pmsg("\n\n\n");
 
-		printf("%ld\n",ans[0][n-1]);
-		return ans[0][n-1];
-	}
+//	gph.printGSet();
+
+//	pmsg("\n\n\n");
+
+
+	gph.MINDIKSTRA();
+//	gph.printGAry(1);
+//	pmsg("\n\n\n");
+
+	gph.MXST();
 	
+	return 0;
 }

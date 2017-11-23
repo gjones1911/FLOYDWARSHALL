@@ -127,7 +127,7 @@ class graph
 		void SetNodes(int &i, int &j, int &wt);
 		node * GETNODE(int num);
 		void MakeA();
-		vector<vector<long> >  MakeAchgs( int chgs);
+		long MakeAchgs( int chgs);
 		void ResetG();
 		//int GDIKSTRA(int &sn, queue<int> &Q, queue<int> &dist);
 		int GDIKSTRA(int &sn, queue<int> &Q, int &dist);
@@ -147,20 +147,22 @@ void graph::ResetG()
 	}
 }
 
-
-//will create a matrix consisting of shortest paths 
-//using exactly chgs charges and return that matrix
-vector<vector<long> >  graph::MakeAchgs( int chgs)
+long graph::MakeAchgs( int chgs)
 {
+
+	//printf("chgs is %d\n", chgs);
+	int hchg = chgs/2;
+	int hchg16 = chgs/16;
+	int hchg32 = chgs/32;
+
+	int imed;
 
 	int i, j, k, f, z, t, num = Sgph.size();
 
-	vector<vector<long> > ACC(num), Ai(num);
+	vector<vector<long> > ACC(num), Ai(num), Alft, Alast;
 	vector<vector<long> > AC1(num), AC8, AC16, AC32;
 
 	vector<vector<long> > AMX(num);
-	vector< vector<vector<long> > > all;
-	all.resize(7);
 	
 	AC.resize(A.size());
 
@@ -173,8 +175,11 @@ vector<vector<long> >  graph::MakeAchgs( int chgs)
 		AC1[i].resize(A[i].size());
 	}
 
+	vector< vector<vector<long> > > all;
 
+	all.resize(7);
 
+	i = 0;
 	for(i = 0; i < A.size(); i++)
 	{
 		for(j = 0; j < A[i].size(); j++)
@@ -189,14 +194,100 @@ vector<vector<long> >  graph::MakeAchgs( int chgs)
 	int sofar, next, l, cnt = 1;;
 	int fr = 4, h = 128, eight = 8, K = 1024, OK = 131072, OM = 1048576, HM = 524288;
 
+	for( l = 2; l < hchg; l = l*2);
 
+
+//	printf("l is %d\n",l);
+//	printf("l/2 is %d\n",l/2);
+
+
+	int ll = l/2;
+
+	int ll4 = l/4;
+
+
+
+	while( ll + ll4 > chgs)
+	{	
+		ll4 = ll4/2;
+	}
+
+///	printf("ll4 is %d\n", ll4);
+	int ll8 = ll4/2;
+	int ll16 = ll8/2;
+	int ll32 = ll16/2;
+	//printf("ll8 is %d\n", ll8);
+	//printf("ll16 is %d\n", ll16);
+	//printf("ll32 is %d\n", ll32);
+
+	int lastmade = l/2;
+
+//	printf("lastmade is %d\n", lastmade);
+//	printf("will need to do %d more \n", chgs - lastmade);
+
+
+
+	int nddd = chgs - lastmade;
+
+	int ON = nddd;
+
+	int last = 1;
+
+	int nmcnt = 1;
+
+	while( nmcnt < nddd)
+	{
+		nmcnt = nmcnt * 2;
+	}
+
+
+	int g2 = nmcnt/2;
+
+	int g3 = g2/2;
+
+	int kkl = 0;
+
+//	printf("can get to %d\n",g2);
+//	printf("next get to %d\n",g3);
+//	printf("summed they are %d\n", g2+g3);
+//	printf("leaves %d \n", nddd - (g2+g3));
+
+	int olndd = nddd - (g2+g3);
+
+	int clst = 1;
+
+	while( clst < nddd - (g2+g3))
+	{
+		clst = clst * 2;
+	}
+
+	int g4 = clst/2;
+
+
+	int g5 = g4/2;
+
+
+//	printf("can get to %d\n",g4);
+//	printf("next get to %d\n",g5);
+//	printf("summed they are %d\n", g4+g5);
+//	printf("leaves %d \n", olndd - (g4+g5));
 
 	int a = 1, b = 1, limit = chgs; ;
 
 	Ai = AMX;
+	//Ai = A;
 
+	//for(sofar = 1; sofar*2 <= chgs; sofar = sofar*2)
 	for(sofar = 2; sofar <= limit; sofar = next)
 	{
+	//	printf("sofar is %d\n", sofar);
+	//	printf("last is A%d\n",last); 
+		//printf("making A%d\n", sofar*2);
+	//	printf("making A%d\n", sofar);
+
+
+	//	printf("\na + b = %d + %d = %d\n", a, b, a+b);
+		
 		Ai = AMX;
 
 		F(f,Sgph.size() )
@@ -205,14 +296,22 @@ vector<vector<long> >  graph::MakeAchgs( int chgs)
 			{
 				F(z,Sgph.size())
 				{
+					//if( z != t)
+		//			if( z != t && f != z && f != t)
 					if(1)
 					{
 						long fz = AC[f][z];
 						long zt = ACC[z][t];
 
+						int sml = (fz < zt) ? fz : zt;
+
+					//	if(Ai[f][t] > sml)
+					//	if(fz != 0 && zt != 0 && Ai[f][t] > fz + zt)
+						//if(fz != 0 && zt != 0 && Ai[f][t] > sml)
 						if(Ai[f][t] > fz + zt)
 						{
 							Ai[f][t] = fz + zt;
+							//Ai[f][t] = sml;
 						}
 					}
 				}
@@ -220,46 +319,58 @@ vector<vector<long> >  graph::MakeAchgs( int chgs)
 
 		}
 
-		//store certain versions for use at the end
-		if( sofar == OM)
-		{ 
-			all[6] = Ai;;
-		}
-		else if( sofar == HM)
-		{
-			all[5] = Ai;;
 
-		}
-		else if( sofar ==  OK)
-		{
-			all[4] = Ai;;
+			if( sofar == OM)
+			{ 
+//				printf("-------------------------saving om\n");
+				all[6] = Ai;;
+			}
+			else if( sofar == HM)
+			{
+//				printf("-------------------------saving HM\n");
+				all[5] = Ai;;
 
-		}
-		else if( sofar == K)
-		{
-			all[3] = Ai;;
+			}
+			else if( sofar ==  OK)
+			{
+//				printf("-------------------------saving OK\n");
+				all[4] = Ai;;
 
-		}
-		else if( sofar == h)
-		{
-			all[2] = Ai;;
+			}
+			else if( sofar == K)
+			{
+//				printf("-------------------------saving K\n");
+				all[3] = Ai;;
 
-		}
-		else if( sofar == eight)
-		{
-			all[1] = Ai;;
+			}
+			else if( sofar == h)
+			{
+//				printf("-------------------------saving h\n");
+				all[2] = Ai;;
 
-		}
-		else if( sofar == fr)
-		{
-			all[0] = Ai;;
+			}
+			else if( sofar == eight)
+			{
+//				printf("-------------------------saving eight\n");
+				all[1] = Ai;;
 
-		}
+			}
+			else if( sofar == fr)
+			{
+//				printf("-------------------------saving fr\n");
+				all[0] = Ai;;
 
+			}
+
+//0-6
 
 		if( sofar * 2 < limit)
 		{
+//			printf("made A%d\n", sofar);
 			next = sofar*2;
+//			printf("NEXT is %d\n",next);
+			//Alast = AC;
+			last = sofar;
 			AC = Ai;
 			ACC = Ai;
 			a = sofar;
@@ -268,17 +379,22 @@ vector<vector<long> >  graph::MakeAchgs( int chgs)
 		}
 		else
 		{
+//			printf("made A%d\n", sofar);
 			ACC = Ai;
+			last = sofar;
+
 			b = sofar;
 
 			if( chgs - sofar >= OM)
 			{
+	//			printf("\n\nusing om\n\n");
 				AC = all[6];
 				next = sofar + OM;
 				a = OM;
 			}
 			else if( chgs - sofar >= HM)
 			{
+	//			printf("\n\nusing HM\n\n");
 				AC = all[5];
 				next = sofar + HM;
 				a = HM;
@@ -286,6 +402,7 @@ vector<vector<long> >  graph::MakeAchgs( int chgs)
 			}
 			else if( chgs - sofar >=  OK)
 			{
+	//			printf("\n\nusing ok\n\n");
 				AC = all[4];
 				next = sofar + OK;
 				a = OK;
@@ -293,6 +410,7 @@ vector<vector<long> >  graph::MakeAchgs( int chgs)
 			}
 			else if( chgs - sofar >= K)
 			{
+	//			printf("\n\nusing k\n\n");
 				AC = all[3];
 				next = sofar + K;
 				a = K;
@@ -300,6 +418,7 @@ vector<vector<long> >  graph::MakeAchgs( int chgs)
 			}
 			else if( chgs - sofar >= h)
 			{
+	//			printf("\n\nusing h\n\n");
 				AC = all[2];
 				next = sofar + h;
 				a = h;
@@ -307,6 +426,7 @@ vector<vector<long> >  graph::MakeAchgs( int chgs)
 			}
 			else if( chgs - sofar >= eight)
 			{
+	//			printf("\n\nusing eight\n\n");
 				AC = all[1];
 				next = sofar + eight;;
 				a = eight;
@@ -314,6 +434,7 @@ vector<vector<long> >  graph::MakeAchgs( int chgs)
 			}
 			else if( chgs - sofar >= fr)
 			{
+	//			printf("\n\nusing fr\n\n");
 				AC = all[0];
 				next = sofar + fr;
 				a = fr;
@@ -321,38 +442,54 @@ vector<vector<long> >  graph::MakeAchgs( int chgs)
 			}
 			else
 			{
+	//			printf("\n\nusing 1 \n\n");
 				AC = AC1;
 				next = sofar+1;;
 				a = 1;;
 			}
 		}
+		/*
+		if(sofar *2 > chgs/2)
+		{
+			pmsg("\n\n\n\nchanging limit\n\n\n\n\n");
+			limit = chgs;
+		}
+		*/
 	}
 
 
-	return Ai;
+
+
+
+	//printf("returning %ld\n", Ai[0][num-1]);
+
+	return Ai[0][num-1];
 }
 
-//makes the A matrix consisting of the shortest paths using
-//exactly one charge
 void graph::MakeA()
 {
 	int i, j, k, f, t;
 
 	A.resize(Sgph.size());
 
+	//	printf("the size of main is %d\n",Sgph.size());
 
 	F(i,Sgph.size() )
 	{
 		A[i].resize(Sgph[i].size(),MX);
 	}
 
+	//	pmsg("\nllll\n");
 	int fi, ij, jt ,ft, min = -MX;;
 
 	F(f, Sgph.size())
 	{
+		//		pmsg("\nloooo\n");
 
 		F(t,Sgph.size())
 		{
+			//			pmsg("\npppp\n");
+
 			min = MX;		
 
 			F(i,Sgph.size())
@@ -361,8 +498,10 @@ void graph::MakeA()
 				F(j, Sgph.size())
 				{
 					if(1)
+						//if(f != i && i != j && j != t )
 					{
 						fi = Sgph[f][i];
+						//ij = -1*Lgph[i][j];
 						ij = Lgph[i][j];
 						jt = Sgph[j][t];
 
@@ -383,6 +522,7 @@ void graph::MakeA()
 	}
 
 	return ;
+
 }
 
 
@@ -971,7 +1111,9 @@ int FLOYDW(int chg, vector<vector<int> >&G, int t)
 					if(PNT)printf("new shortest path %d\n", ik+kj);
 					G[i][j] = G[i][k] + G[k][j];
 				}
+				//else if(( t == 1 && ik > -MX && kj > -MX && ij < ik + kj))
 				else if( t == 1 && i != j && i != k && k != j && ik > -MX && kj > -MX )
+				//else if( t == 1 )
 				{
 					int f = (ik < kj ) ? ik : kj;
 
@@ -979,6 +1121,7 @@ int FLOYDW(int chg, vector<vector<int> >&G, int t)
 
 					if( ik+kj > G[i][j])
 					{
+						//G[i][j] = f;;
 						G[i][j] = ik+kj;;
 
 					}
@@ -1111,6 +1254,10 @@ int main(int argc, char ** argv)
 
 	int num = 10;
 
+	//CODE SPECific VARS
+	//graph gph(num,SZ);
+
+
 	string N,from,to,wt,chg;
 
 	//get number of vertices N, from, to, and weight vectors, and the number of charges
@@ -1125,22 +1272,41 @@ int main(int argc, char ** argv)
 	tv = (SVtoIV( StoSV(to  ,tt) ));
 	int numb = 0;
 
+//	printf("size of fv is %d\n", fv.size());
+
+	//exit(0);
+	
 	int cnt = 0;
 
 	while(cnt < fv.size())
 	{
 		cin>>numb;
 		cnt++;
+		//printf("num is %d\n", numb);
 		wtv.push_back(numb);	
 	}
 
+	//getline(cin,wt);
+	//getline(cin,chg);
 	cin>>chg;
 
+//	cout<<"the chng "<<chg<<endl;
 	int n = atoi(N.c_str());
 	int chn = atoi(chg.c_str());
 
+//	printf("N: %d, charges: %d\n", n, chn);
+
+
+
+	//convert the string vectors into integer vectors
+	//wtv = (SVtoIV( StoSV(wt,"wt") ));
+
 	graph gph(fv, tv, wtv,n,0);
-	
+	//graph Dgph(fv, tv, wtv,n,0);
+	//graph Fgph(fv, tv, wtv,n,0);
+	//graph Bgph(fv, tv, wtv,n,0);
+
+	//create a graph class
 	gph.max = SZ;
 	gph.min = -SZ;
 
@@ -1159,17 +1325,45 @@ int main(int argc, char ** argv)
 
 	string str;
 
-	//make the shortest path matrix 
-	//stored in the graph class as Sgph
-	FLOYDW(chn,gph.Sgph,0);
-	
+//	gph.printGAry(0);
+//	pmsg("\n\n\n\n");
+//	gph.printGAry(1);
+//	pmsg("\n\n\n\n");
+//	gph.printGAry(1);
+//	pmsg("\n\n\n\n");
+//	Dgph.printGAry(0);
 
-	//make the A matrix that is 
-	//the shortest path using only one charge
-	//stored as A in the graph class
-	gph.MakeA();
+//	pmsg("\n\n\n");
 	
-	//find the min path using various conditions
+//	gph.printGAry(2);
+//	Dgph.printGAry(2);
+
+//	pmsg("\n\n\n");
+
+//	gph.printGSet();
+
+//	pmsg("\n\n\n");
+
+
+//	gph.MINDIKSTRA();
+//	gph.printGAry(1);
+//	pmsg("\n\n\n");
+	FLOYDW(chn,gph.Sgph,0);
+//	pmsg("\n\n\n\n");
+	
+	//FLOYDW(chn,gph.gph,1);
+//	pmsg("\n\n\n\n");
+//	gph.printGAry(1);
+//	pmsg("\n\n\n\n");
+//	gph.printGAry(0);
+//	pmsg("\n\n\n\n");
+
+	gph.MakeA();
+//printf("made A\n");	
+//	gph.printGAry(3);
+//	pmsg("\n\n\n\n");
+
+//exit(0);
 	if( chn == 0)
 	{
 		printf("%d\n",gph.Sgph[0][n-1]);
@@ -1185,12 +1379,44 @@ int main(int argc, char ** argv)
 		printf("%d\n",gph.A[0][n-1]);
 		return gph.A[0][n-1];
 	}
+	//else if(gph.Sgph.size() == 2)
+//	{
+		
+//	}
 	else
 	{
-		vector<vector<long> >  ans = gph.MakeAchgs(chn);
 
-		printf("%ld\n",ans[0][n-1]);
-		return ans[0][n-1];
+
+//		printf("makeing a chngs with %d chgs\n", chn);
+
+		long ans = gph.MakeAchgs(chn);
+
+		printf("%ld\n",ans);
+		return ans;
 	}
-	
+	//	pmsg("\n\n\nL\n");
+
+	//gph.printGSet();
+	//gph.MXST();
+
+
+
+
+	/*
+	   FLOYDW(chn,gph.gph,0);
+	   FLOYDW(chn,gph.Sgph,0);
+	   FLOYDW(chn,gph.Lgph,1);
+	   gph.printGAry(0);
+	   pmsg("\n\n\nS\n");
+
+	   gph.printGAry(1);
+
+	   pmsg("\n\n\nL\n");
+
+
+	gph.printGAry(2);
+
+	pmsg("\n\n\n");
+*/
+	return 0;
 }
